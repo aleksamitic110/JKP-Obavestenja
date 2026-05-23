@@ -1,0 +1,16 @@
+source_url: "https://jkpnaissus.co.rs/servisne-informacije/"
+max_posts: 12
+request_timeout_seconds: 20
+email_subject_prefix: "[Vodovod]"
+
+locations:
+  - name: "Moja lokacija"
+    keywords:
+      - "Niska Banja"
+      - "Zaplanjska"
+      - "Naselje Nikola Tesla"
+
+  - name: "Dodatna test lokacija"
+    keywords:
+      - "Pantelej"
+      - "Durlan"

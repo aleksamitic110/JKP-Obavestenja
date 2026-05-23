@@ -1,0 +1,31 @@
+source_url: "https://jkpnaissus.co.rs/servisne-informacije/"
+max_posts: 12
+request_timeout_seconds: 20
+email_subject_prefix: "[Vodovod]"
+
+locations:
+  - name: "Niska Banja / Zaplanjska"
+    keywords:
+      - "Niska Banja"
+      - "Zaplanjska"
+      - "Naselje Nikola Tesla"
+
+  - name: "Pantelej"
+    keywords:
+      - "Pantelej"
+
+  - name: "Durlan"
+    keywords:
+      - "Durlan"
+
+  - name: "Mediana"
+    keywords:
+      - "Mediana"
+
+  - name: "Palilula"
+    keywords:
+      - "Palilula"
+
+  - name: "Ledena Stena"
+    keywords:
+      - "Ledena Stena"
