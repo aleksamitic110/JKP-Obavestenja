@@ -3,7 +3,7 @@ name: Water Alerts
 on:
   workflow_dispatch:
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "0 */2 * * *"
 
 permissions:
   contents: write
@@ -42,4 +42,3 @@ jobs:
           git add data/state.json
           git diff --cached --quiet || git commit -m "Update processed water alerts"
           git push
-
