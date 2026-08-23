@@ -1,72 +1,58 @@
-# Vodovod Obavestenja
+# Serbia Utility Alerts
 
-MVP servis koji prati JKP Naissus servisne informacije i salje email kada nova objava sadrzi lokaciju iz `config.yml`.
+Bespлатна platforma za obaveštavanje građana Srbije o prekidima vode, struje i drugih komunalnih usluga.
 
-## Kako radi
+Korisnici se prijavljuju putem email-a biraju lokaciju na mapi i primaju obaveštenja kada dođe do prekida u njihovom području.
 
-1. Skida listu objava sa `https://jkpnaissus.co.rs/servisne-informacije/`.
-2. Otvara nove objave koje nisu u `data/state.json`.
-3. Normalizuje tekst tako da se lakse porede cirilica, latinica i dijakritici.
-4. Ako tekst sadrzi neku lokaciju iz `config.yml`, salje email.
-5. Upisuje obradjene linkove u `data/state.json`, da ne salje duplikate.
+## Arhitektura
 
-`data/state.json` ne sadrzi tajne podatke. U njemu su samo linkovi vec obradjenih objava.
+```
+app/
+├── core/                    # Deljena logika (normalizacija teksta, matchovanje)
+├── scrapers/                # Plugin sistem za skupljanje podataka
+│   ├── base.py              # Apstraktna klasa za sve scrapere
+│   ├── registry.py          # Auto-registracija scrapera
+│   └── implementations/     # Konkretni scraperi (Naissus voda, EDS struja, ...)
+├── notifications/           # Plugin sistem za slanje obaveštenja
+│   ├── base.py              # Apstraktna klasa za sve kanale
+│   ├── dispatch.py          # Logika usklađivanja i slanja
+│   └── channels/            # Konkretni kanali (email, telegram, discord, ...)
+├── models/                  # SQLAlchemy ORM modeli
+├── routes/                  # FastAPI rute (web + API)
+├── templates/               # Jinja2 HTML šablone
+├── scheduler.py             # APScheduler — zakazivanje scrapera
+├── config.py                # Podešavanja iz .env
+├── database.py              # Async SQLAlchemy engine
+└── main.py                  # FastAPI aplikacija
+```
 
-## Lokalno pokretanje
+## Pokretanje
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+```bash
 pip install -r requirements.txt
-Copy-Item .env.example .env
+cp .env.example .env
+# Popuni .env podatke
+uvicorn app.main:app --reload
 ```
 
-Popuni `.env` SMTP podacima, pa pokreni:
+## Docker
 
-```powershell
-python -m water_alerts.app --dry-run
+```bash
+docker compose up --build
 ```
 
-Dry run ne salje email i ne menja `data/state.json`.
+Pokreće: FastAPI (port 8000) + PostgreSQL 16 + Caddy (port 80).
 
-Za stvarno slanje:
+## Dodavanje novog scrapera
 
-```powershell
-python -m water_alerts.app
-```
+1. Kopiraj `app/scrapers/implementations/_template.py`
+2. Implementiraj `fetch_latest()`
+3. Dodaj `@register("moj_ključ")`
+4. Importuj u `implementations/__init__.py`
+5. Dodaj red u `scraper_sources` tabelu
 
-## GitHub Actions podesavanje
+## Dodavanje novog kanala obaveštenja
 
-1. Napravi GitHub repository i pushuj projekat.
-2. U repository idi na `Settings -> Secrets and variables -> Actions`.
-3. Dodaj ove `Repository secrets`:
-   - `SMTP_HOST`
-   - `SMTP_PORT`
-   - `SMTP_USE_TLS`
-   - `SMTP_USERNAME`
-   - `SMTP_PASSWORD`
-   - `EMAIL_FROM`
-   - `EMAIL_TO`
-4. U `Settings -> Actions -> General` proveri da workflow permissions imaju `Read and write permissions`.
-5. Workflow `.github/workflows/water-alerts.yml` se pokrece na svakih 15 minuta i moze rucno iz `Actions -> Water Alerts -> Run workflow`.
-
-Za Gmail se obicno koristi:
-
-```text
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USE_TLS=true
-SMTP_USERNAME=tvoj-email@gmail.com
-SMTP_PASSWORD=google-app-password
-EMAIL_FROM=tvoj-email@gmail.com
-EMAIL_TO=email-na-koji-stizu-obavestenja@example.com
-```
-
-Ne koristi glavnu Gmail lozinku. Koristi Google App Password.
-
-## Lokacije
-
-Lokacije se menjaju u `config.yml`. Kod je na engleskom, a email poruke su na srpskom bez dijakritika radi stabilnosti kroz razlicite mail klijente.
-
-Ako je repository javni, `config.yml` javno otkriva lokacije koje pratis. Ako to ne zelis, drzi repository private ili ukloni licne ulice iz konfiguracije.
-
+1. Napravi `app/notifications/channels/moj_kanal.py`
+2. Nasledi `NotifierBase`, implementiraj `send()`
+3. Dodaj u `channels/__init__.py`
